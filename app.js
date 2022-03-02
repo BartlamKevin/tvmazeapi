@@ -1,9 +1,8 @@
 /* 
 Given a query string, return array of matching shows:
-    { id, name, summary, episodesUrl }
-*/
+{ id, name, summary, episodesUrl }
 
-/* Search Shows
+Search Shows
     - given a search term, search for tv shows that 
       match that query.  The function is async show it 
       will be returning a promise.
@@ -18,10 +17,10 @@ Given a query string, return array of matching shows:
     }
 */
 async function searchShows(query) {
-    /* 
-    TODO: Make an ajax request to the searchShows api.  Remove
-    hard coded data. 
-    */
+/* 
+TODO: Make an ajax request to the searchShows api.  Remove
+hard coded data. 
+*/
 
     return [
         {
