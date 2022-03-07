@@ -1,36 +1,26 @@
-/* 
-Given a query string, return array of matching shows:
-{ id, name, summary, episodesUrl }
+const NOIMAGE = "ftfile-broken.png"
 
-Search Shows
-    - given a search term, search for tv shows that 
-      match that query.  The function is async show it 
-      will be returning a promise.
-
-    - Returns an array of objects. Each object should include
-      following show information:
-    {
-        id: <show id>,
-        name: <show name>,
-        summary: <show summary>,
-        image: <an image from the show data, or a default imege if no image exists, (image isn't needed until later)>
-    }
-*/
 async function searchShows(query) {
-/* 
-TODO: Make an ajax request to the searchShows api.  Remove
-hard coded data. 
-*/
-
-    return [
+    /* 
+    hard coded data
         {
             id: 1767,
             name: "The Bletchley Circle",
-            summary:
-                "<p><b>The Bletchley Circle</b> follows the journey of four ordinary women with extraordinary skills that helped to end World War II.</p><p>Set in 1952, Susan, Millie, Lucy and Jean have returned to their normal lives, modestly setting aside the part they played in producing crucial intelligence, which helped the Allies to victory and shortened the war. When Susan discovers a hidden code behind an unsolved murder she is met by skepticism from the police. She quickly realises she can only begin to crack the murders and bring the culprit to justice with her former friends.</p>",
+            summary:"<p><b>The Bletchley Circle</b> follows the journey of four ordinary women with extraordinary skills that helped to end World War II.</p><p>Set in 1952, Susan, Millie, Lucy and Jean have returned to their normal lives, modestly setting aside the part they played in producing crucial intelligence, which helped the Allies to victory and shortened the war. When Susan discovers a hidden code behind an unsolved murder she is met by skepticism from the police. She quickly realises she can only begin to crack the murders and bring the culprit to justice with her former friends.</p>",
             image: "http://static.tvmaze.com/uploads/images/medium_portrait/147/369403.jpg",
         },
-    ];
+    */
+    let response = await axios.get(`https://api.tvmaze.com/search/shows?q=${query}`);
+    let showQuery = response.data.map(function(result){
+        let show = result.show;
+        return {
+                id: show.id,
+                name: show.name,
+                summary:show.summary,
+                image: show.image ? show.image.original : NOIMAGE,
+            };
+        });
+    return showQuery;
 }
 
 /* 
@@ -45,17 +35,18 @@ function populateShows(shows) {
     for (let show of shows) {
         let $item = $(
             `
-            <div class="col-md-6 col-lg-3 Show" data-show-id="${show.id}">
+            <div class="col-md-6 col-lg-3 show" data-show-id="${show.id}">
                 <div class="card" data-show-id="${show.id}">
+                <img class="card-img-top" src="${show.image}">
                     <div class="card-body">
                         <h5 class="card-title">${show.name}</h5>
                         <p class="card-text">${show.summary}</p>
+                        <button class="btn btn-primary episodes">Episodes</button>
                     </div>
                 </div>
             </div>
             `
         );
-
         $showsList.append($item);
     }
 }
@@ -85,10 +76,39 @@ Given a show ID, return list of episodes:
 */
 
 async function getEpisodes(id) {
-    /*
-    TODO: get episodes from tvmaze
-    you can get this by making GET request to
-    http://api.tvmaze.com/shows/SHOW-ID-HERE/episodes
-    TODO: return array-of-episode-info, as described in docstring above 
-    */
+    let response = await axios.get(`https://api.tvmaze.com/shows/${id}/episodes`);
+    let episodeQuery = response.data.map(function(result){
+        let episode = result;
+        return {
+                id: episode.id,
+                name: episode.name,
+                season: episode.season,
+                number: episode.number
+            };
+        });
+    return episodeQuery;
 }
+
+function populateEpisodes(episodes) {
+    const $episodeList = $("#episodes-list");
+    $episodeList.empty();
+
+    for (let episode of episodes) {
+        let $item = $(
+            `
+            <li>
+                Season ${episode.season} - ep. ${episode.number} - ${episode.name}
+            </li>
+            `
+        );
+        $episodeList.append($item);
+    }
+    $("#episodes-area").show();
+}
+
+//click event handler that will show epsiodes
+$("#shows-list").on("click", ".episodes", async function handleEpisodes(evt){
+    let showId = $(evt.target).closest(".show").data("show-id");
+    let episodeList = await getEpisodes(showId);
+    populateEpisodes(episodeList);
+})
